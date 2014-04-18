@@ -3,7 +3,7 @@
 > Role models are important. <br/>
 > -- Officer Alex J. Murphy / RoboCop
 
-One thing has always bothered me as Ruby developer - Python developers
+One thing has always bothered me as a Ruby developer - Python developers
 have a great programming style reference
 ([PEP-8](http://www.python.org/dev/peps/pep-0008/)) and we never got
 an official guide, documenting Ruby coding style and best
@@ -26,7 +26,7 @@ beneficial to each and every Ruby developer out there.
 
 By the way, if you're into Rails you might want to check out the
 complementary
-[Ruby on Rails 3 Style Guide](https://github.com/bbatsov/rails-style-guide).
+[Ruby on Rails 3 & 4 Style Guide](https://github.com/bbatsov/rails-style-guide).
 
 # The Ruby Style Guide
 
@@ -63,6 +63,8 @@ Translations of the guide are available in the following languages:
 * [Chinese Simplified](https://github.com/JuanitoFatas/ruby-style-guide/blob/master/README-zhCN.md)
 * [Chinese Traditional](https://github.com/JuanitoFatas/ruby-style-guide/blob/master/README-zhTW.md)
 * [French](https://github.com/porecreat/ruby-style-guide/blob/master/README-frFR.md)
+* [Spanish](https://github.com/alemohamad/ruby-style-guide/blob/master/README-esLA.md)
+* [Vietnamese](https://github.com/scrum2b/ruby-style-guide/blob/master/README-viVN.md)
 
 ## Table of Contents
 
@@ -89,7 +91,7 @@ Translations of the guide are available in the following languages:
 > -- Jerry Coffin (on indentation)
 
 * Use `UTF-8` as the source file encoding.
-* Use two **spaces** per indentation level. No hard tabs.
+* Use two **spaces** per indentation level (aka soft tabs). No hard tabs.
 
     ```Ruby
     # bad - four spaces
@@ -103,7 +105,7 @@ Translations of the guide are available in the following languages:
     end
     ```
 
-* Use Unix-style line endings. (*BSD/Solaris/Linux/OSX users are covered by default,
+* Use Unix-style line endings. (*BSD/Solaris/Linux/OS X users are covered by default,
   Windows users have to be extra careful.)
     * If you're using Git you might want to add the following
     configuration setting to protect your project from Windows line
@@ -235,7 +237,17 @@ Translations of the guide are available in the following languages:
 
     ```Ruby
     some(arg).other
-    [1, 2, 3].length
+    [1, 2, 3].size
+    ```
+
+* No space after `!`.
+
+    ```Ruby
+    # bad
+    ! something
+
+    # good
+    !something
     ```
 
 * Indent `when` as deep as `case`. I know that many would disagree
@@ -322,8 +334,8 @@ Translations of the guide are available in the following languages:
       end
     ```
 
-* Use empty lines between `def`s and to break up a method into logical
-  paragraphs.
+* Use empty lines between method definitions and also to break up a method into logical
+  paragraphs internally.
 
     ```Ruby
     def some_method
@@ -337,6 +349,24 @@ Translations of the guide are available in the following languages:
     def some_method
       result
     end
+    ```
+
+* Avoid comma after the last parameter in a method call, especially when the
+  parameters are not on separate lines.
+
+    ```Ruby
+    # bad - easier to move/add/remove parameters, but still not preferred
+    some_method(
+                 size,
+                 count,
+                 color,
+               )
+
+    # bad
+    some_method(size, count, color, )
+
+    # good
+    some_method(size, count, color)
     ```
 
 * Use spaces around the `=` operator when assigning default values to method parameters:
@@ -421,6 +451,25 @@ Translations of the guide are available in the following languages:
         body: source.text
       )
     end
+    ```
+
+* Align the elements of array literals spanning multiple lines.
+
+    ```Ruby
+    # bad - single indent
+    menu_item = ["Spam", "Spam", "Spam", "Spam", "Spam", "Spam", "Spam", "Spam",
+      "Baked beans", "Spam", "Spam", "Spam", "Spam", "Spam"]
+
+    # good
+    menu_item = [
+      "Spam", "Spam", "Spam", "Spam", "Spam", "Spam", "Spam", "Spam",
+      "Baked beans", "Spam", "Spam", "Spam", "Spam", "Spam"
+    ]
+
+    # good
+    menu_item =
+      ["Spam", "Spam", "Spam", "Spam", "Spam", "Spam", "Spam", "Spam",
+       "Baked beans", "Spam", "Spam", "Spam", "Spam", "Spam"]
     ```
 
 * Add underscores to large numeric literals to improve their readability.
@@ -603,6 +652,27 @@ Never use `::` for regular method invocation.
 
     # good
     x = !something
+    ```
+
+* Avoid the use of `!!`.
+
+    ```Ruby
+    # bad
+    x = 'test'
+    # obscure nil check
+    if !!x
+      # body omitted
+    end
+
+    x = false
+    # double negation is useless on booleans
+    !!x # => false
+
+    # good
+    x = 'test'
+    if !x.nil?
+      # body omitted
+    end
     ```
 
 * The `and` and `or` keywords are banned. It's just not worth
@@ -788,7 +858,7 @@ Never use `::` for regular method invocation.
     user.set({ name: 'John', age: 45, permissions: { read: true } })
 
     # good
-    User.set(name: 'John', age: 45, permissions: { read: true })
+    user.set(name: 'John', age: 45, permissions: { read: true })
     ```
 
 * Omit both the outer braces and parentheses for methods that are
@@ -849,6 +919,33 @@ Never use `::` for regular method invocation.
     Some will argue that multiline chaining would look OK with the use of {...}, but they should
     ask themselves - is this code really readable and can the blocks' contents be extracted into
     nifty methods?
+
+* Consider using explicit block argument to avoid writing block
+  literal that just passes its arguments to another block. Beware of
+  the performance impact, though, as the block gets converted to a
+  Proc.
+
+    ```Ruby
+    require 'tempfile'
+
+    # bad
+    def with_tmp_dir
+      Dir.mktmpdir do |tmp_dir|
+        Dir.chdir(tmp_dir) { |dir| yield dir }  # block just passes arguments
+      end
+    end
+
+    # good
+    def with_tmp_dir(&block)
+      Dir.mktmpdir do |tmp_dir|
+        Dir.chdir(tmp_dir, &block)
+      end
+    end
+
+    with_tmp_dir do |dir|
+      puts "dir is accessible as parameter and pwd is set: #{dir}"
+    end
+    ```
 
 * Avoid `return` where not required for flow of control.
 
@@ -958,8 +1055,26 @@ would happen if the current value happened to be `false`.)
     enabled = true if enabled.nil?
     ```
 
-* Avoid explicit use of the case equality operator `===`. As it name
-  implies it's meant to be used implicitly by `case` expressions and
+* Use `&&=` to preprocess variables that may or may not exist. Using `&&=` will change the value only if it exists, removing the need to check its existence with `if`.
+
+    ```Ruby
+    # bad
+    if something
+      something = something.downcase
+    end
+
+    # ok
+    something = something.downcase if something
+
+    # good
+    something = something && something.downcase
+
+    # better
+    something &&= something.downcase
+    ```
+
+* Avoid explicit use of the case equality operator `===`. As its name
+  implies it is meant to be used implicitly by `case` expressions and
   outside of them it yields some pretty confusing code.
 
     ```Ruby
@@ -1297,7 +1412,8 @@ setting the warn level to 0 via `-W0`).
 
 * The names of predicate methods (methods that return a boolean value)
   should end in a question mark.
-  (i.e. `Array#empty?`).
+  (i.e. `Array#empty?`). Methods that don't return a boolean, shouldn't
+  end in a question mark.
 * The names of potentially *dangerous* methods (i.e. methods that
   modify `self` or the arguments, `exit!` (doesn't run the finalizers
   like `exit` does), etc.) should end with an exclamation mark if
@@ -1631,7 +1747,7 @@ constructor and comparison operators for you.
     ```Ruby
     # good
     class Person
-      attr_reader :first_name, :last_name
+      attr_accessor :first_name, :last_name
 
       def initialize(first_name, last_name)
         @first_name = first_name
@@ -1787,6 +1903,29 @@ in *Ruby* now, not in *Python*.
     rescue => error
       raise if error.message != 'Oops'
     end
+    ```
+
+* Don't specify `RuntimeError` explicitly in the two argument version of `fail/raise`.
+
+    ```Ruby
+    # bad
+    fail RuntimeError, 'message'
+
+    # good - signals a RuntimeError by default
+    fail 'message'
+    ```
+
+* Prefer supplying an exception class and a message as two separate
+  arguments to `fail/raise`, instead of an exception instance.
+
+    ```Ruby
+    # bad
+    fail SomeException.new('message')
+    # Note that there is no way to do `fail SomeException.new('message'), backtrace`.
+
+    # good
+    fail SomeException, 'message'
+    # Consistent with `fail SomeException, 'message', backtrace`.
     ```
 
 * Never return from an `ensure` block. If you explicitly return from a
@@ -2011,6 +2150,24 @@ this rule only to arrays with two or more elements.
     STATES = %i(draft open closed)
     ```
 
+* Avoid comma after the last item of an `Array` or `Hash` literal, especially
+  when the items are not on separate lines.
+
+    ```Ruby
+    # bad - easier to move/add/remove items, but still not preferred
+    VALUES = [
+               1001,
+               2020,
+               3333,
+             ]
+
+    # bad
+    VALUES = [1001, 2020, 3333, ]
+
+    # good
+    VALUES = [1001, 2020, 3333]
+    ```
+
 * Avoid the creation of huge gaps in arrays.
 
     ```Ruby
@@ -2198,7 +2355,7 @@ this rule only to arrays with two or more elements.
       |  other_method
       |end
     END
-    #=> "def\n  some_method\n  \nother_method\nend"
+    #=> "def test\n  some_method\n  other_method\nend\n"
     ```
 
 ## Regular Expressions
@@ -2361,7 +2518,7 @@ this rule only to arrays with two or more elements.
     %q{"Test's king!", John said.}
 
     # good
-    %w(one tho three)
+    %w(one two three)
     %q("Test's king!", John said.)
     ```
 
@@ -2381,7 +2538,7 @@ this rule only to arrays with two or more elements.
 
   - `define_method` is preferable to `class_eval{ def ... }`
 
-* When using `class_eval` (or other `eval`) with string interpolation, add a comment block showing its appearance if interpolated (a practice I learned from the Rails code):
+* When using `class_eval` (or other `eval`) with string interpolation, add a comment block showing its appearance if interpolated (a practice used in Rails code):
 
     ```ruby
     # from activesupport/lib/active_support/core_ext/string/output_safety.rb
@@ -2493,6 +2650,10 @@ community.
 
 Feel free to open tickets or send pull requests with improvements. Thanks in
 advance for your help!
+
+## How to Contribute?
+
+It's easy, just follow the [contribution guidelines](https://github.com/bbatsov/ruby-style-guide/blob/master/CONTRIBUTING.md).
 
 # License
 
